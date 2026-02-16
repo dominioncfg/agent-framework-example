@@ -7,14 +7,14 @@ namespace AgentFrameworkExamples;
 
 public static partial class Examples
 {
-    public static async Task BasicChatLoop(IConfiguration configuration)
+    public static async Task BasicChatLoop(IConfiguration configuration, ModelConfiguration modelConfiguration)
     {
         string apiKey = configuration.GetApiKeyOrExit();
+        var client = new OpenAIClient(apiKey);
 
-        var client = new OpenAIClient(apiKey); //Note
-
-        //Create Agent
-        var agent = client.GetChatClient("gpt-4.1-nano").AsAIAgent();
+        var agent = client
+            .GetChatClient(modelConfiguration.ModelName)
+            .AsAIAgent(modelConfiguration.Instructions);
         var session = await agent.CreateSessionAsync();
 
         while (true)

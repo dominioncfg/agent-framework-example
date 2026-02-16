@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AgentFrameworkExamples;
 
@@ -14,6 +15,17 @@ public static class ConfigurationExtensions
             Environment.Exit(1);
         }
         return apiKey;
+    }
+
+    public static IServiceProvider BuildServiceProvider()
+    {
+        var services = new ServiceCollection();
+
+        services.AddTransient<ITransientDependencyTool, TransientDependencyTool>();
+        services.AddScoped<IScopedDependencyTool, ScopedDependencyTool>();
+        services.AddSingleton<ISingletonDependencyTool, SingletonDependencyTool>();
+
+        return services.BuildServiceProvider();
     }
 
     public static IConfiguration BuildConfiguration()
