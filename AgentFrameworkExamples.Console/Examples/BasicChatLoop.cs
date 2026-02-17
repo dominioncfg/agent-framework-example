@@ -1,5 +1,6 @@
 ﻿using Microsoft.Agents.AI;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using OpenAI;
 using OpenAI.Chat;
 
@@ -7,8 +8,9 @@ namespace AgentFrameworkExamples;
 
 public static partial class Examples
 {
-    public static async Task BasicChatLoop(IConfiguration configuration, ModelConfiguration modelConfiguration)
+    public static async Task BasicChatLoop(IConfiguration configuration, IServiceProvider serviceProvider)
     {
+        var modelConfiguration = serviceProvider.GetRequiredService<ModelConfiguration>();
         string apiKey = configuration.GetApiKeyOrExit();
         var client = new OpenAIClient(apiKey);
 

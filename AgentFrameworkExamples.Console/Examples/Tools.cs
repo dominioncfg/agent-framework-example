@@ -11,8 +11,9 @@ namespace AgentFrameworkExamples;
 
 public static partial class Examples
 {
-    public static async Task InternalToolsExample(IConfiguration configuration, IServiceProvider serviceProvider, ModelConfiguration modelConfiguration)
+    public static async Task InternalToolsExample(IConfiguration configuration, IServiceProvider serviceProvider)
     {
+        ModelConfiguration modelConfiguration = serviceProvider.GetRequiredService<ModelConfiguration>();
         string apiKey = configuration.GetApiKeyOrExit();
         var client = new OpenAIClient(apiKey);
 

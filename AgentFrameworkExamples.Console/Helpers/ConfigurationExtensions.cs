@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace AgentFrameworkExamples;
 
-public static class ConfigurationExtensions
+public static class DependencyInjectionConfigurationExtensions
 {
     public static string GetApiKeyOrExit(this IConfiguration configuration)
     {
@@ -17,22 +19,37 @@ public static class ConfigurationExtensions
         return apiKey;
     }
 
-    public static IServiceProvider BuildServiceProvider()
+    public static IHost CreateHost()
     {
-        var services = new ServiceCollection();
+        return Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration((context, config) =>
+            {
+                config.AddUserSecrets<Program>();
+            })
+            .ConfigureServices((context, services) =>
+            {
+                // Register configuration
+                var configuration = context.Configuration;
 
-        services.AddTransient<ITransientDependencyTool, TransientDependencyTool>();
-        services.AddScoped<IScopedDependencyTool, ScopedDependencyTool>();
-        services.AddSingleton<ISingletonDependencyTool, SingletonDependencyTool>();
+                // Register DbContext
+                var connectionString = configuration.GetConnectionString("DefaultConnection")
+                    ?? "Server=localhost,1433;Database=AgentFrameworkDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;";
 
-        return services.BuildServiceProvider();
-    }
+                services.AddDbContext<DocumentationDbContext>(options =>
+                    options.UseSqlServer(connectionString));
 
-    public static IConfiguration BuildConfiguration()
-    {
-        var configuration = new ConfigurationBuilder()
-            .AddUserSecrets<Program>()
+                // Register custom services
+                services.AddTransient<ITransientDependencyTool, TransientDependencyTool>();
+                services.AddScoped<IScopedDependencyTool, ScopedDependencyTool>();
+                services.AddSingleton<ISingletonDependencyTool, SingletonDependencyTool>();
+
+                // Register application services
+                services.AddSingleton<ModelConfiguration>(sp => new ModelConfiguration
+                {
+                    ModelName = "gpt-4.1-nano",
+                    Instructions = "You are a helpful assistant for tourists trying to visit Madrid, no matter what you get asked you don't know about any other region or any other topics"
+                });
+            })
             .Build();
-        return configuration;
     }
 }

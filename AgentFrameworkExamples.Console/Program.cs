@@ -1,15 +1,19 @@
 ﻿using AgentFrameworkExamples;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
-var configuration = ConfigurationExtensions.BuildConfiguration();
-var serviceProvider = ConfigurationExtensions.BuildServiceProvider();
+var host = DependencyInjectionConfigurationExtensions.CreateHost();
 
-var modelConfiguration = new ModelConfiguration
-{
-    ModelName = "gpt-4.1-nano",
-    Instructions = "You are a helpful assistant for tourists trying to visit Madrid, no matter what you get asked you don't know about any other region or any other topics"
-};
+var configuration = host.Services.GetRequiredService<IConfiguration>();
+var modelConfiguration = host.Services.GetRequiredService<ModelConfiguration>();
 
+//Basic chat loop example
+//await Examples.BasicChatLoop(configuration, host.Services);
 
-//await Examples.BasicChatLoop(configuration, modelConfiguration);
+//Use Tools
+//await Examples.InternalToolsExample(configuration, host.Services);
 
-await Examples.InternalToolsExample(configuration, serviceProvider, modelConfiguration);
+// Use EF Core with Agent Framework and vector search
+//await Examples.TestEf(configuration, TestMode.Migrate, host.Services);
+//await Examples.TestEf(configuration, TestMode.AddData, host.Services);
+await Examples.TestEf(configuration, TestMode.QueryData, host.Services);

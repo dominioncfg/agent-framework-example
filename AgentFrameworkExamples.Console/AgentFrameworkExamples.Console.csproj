@@ -10,14 +10,22 @@
 
   <ItemGroup>
 
-    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="6.0.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.3" />
 
     <!-- The Microsoft.Agents.AI.OpenAI package is a preview package that provides integration with OpenAI's language models. -->
     <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-preview.260212.1" />
 
     <!-- MCP protocl also includes McpCLient class-->
     <PackageReference Include="ModelContextProtocol" Version="0.8.0-preview.1" />
+
+    <!-- Entity Framework Core packages -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
