@@ -16,4 +16,10 @@ var modelConfiguration = host.Services.GetRequiredService<ModelConfiguration>();
 // Use EF Core with Agent Framework and vector search
 //await Examples.TestEf(configuration, TestMode.Migrate, host.Services);
 //await Examples.TestEf(configuration, TestMode.AddData, host.Services);
-await Examples.TestEf(configuration, TestMode.QueryData, host.Services);
+//await Examples.TestEf(configuration, TestMode.QueryData, host.Services);
+
+
+//Rag Agent
+//await Examples.TestEf(configuration, TestMode.Migrate, host.Services);
+await Examples.TestEf(configuration, TestMode.AddData, host.Services);
+await Examples.RagChatAgent(configuration, host.Services);

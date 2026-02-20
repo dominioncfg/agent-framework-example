@@ -179,7 +179,7 @@ public class TestData
         {
             Id = Guid.NewGuid(),
             Title = "Static Web Hosting and Global Content Delivery Networks",
-            Content = "Static web applications built with modern frameworks like React, Angular, or Vue.js can be deployed efficiently using cloud storage services combined with Content Delivery Networks (CDNs). Platforms like Azure Static Web Apps, AWS Amplify, and Netlify provide seamless integration with Git repositories, automatic builds, and global distribution of static assets. CDNs cache content at edge locations worldwide, dramatically reducing latency and improving user experience. This architecture is perfect for blogs, documentation sites, portfolios, and single-page applications that don't require server-side rendering for every request."
+            Content = "Static web applications built with modern frameworks like React, Angular, or Vue.js can be deployed efficiently using cloud storage services combined with Content Delivery Networks (CDNs). Platforms like Azure Static Web Apps, AWS Amplify, and Netlify provide seamless integration with Git repositories, automatic builds, and global distribution of static assets. CDNs cache content at edge locations worldwide, dramatically reducing latency and improving user experience. This architecture is perfect for blogs, documentation sites, portfolios, and single-page applications that don't require server-side rendering for every request. A required step for this architecture is that is has to be approved by Perico Perez our CTO."
         },
         new DocumentationArticle
         {
