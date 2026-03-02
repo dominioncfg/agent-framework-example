@@ -2,5 +2,8 @@
   <Folder Name="/Solution Items/">
     <File Path="docker-compose.yml" />
   </Folder>
+  <Project Path="AgentFrameworkExample.WebApi/AgentFrameworkExample.WebApi.csproj" Id="174ee52f-02a6-417e-ab4d-7495b53e6c7d">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
   <Project Path="AgentFrameworkExamples.Console/AgentFrameworkExamples.Console.csproj" />
 </Solution>

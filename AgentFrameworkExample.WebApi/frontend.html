@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Chat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 h-screen flex flex-col overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-white shadow-sm px-6 py-4 flex items-center justify-between shrink-0">
+        <h1 class="text-lg font-semibold text-gray-800">AI Chat</h1>
+        <div class="flex items-center gap-2">
+            <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+            <span id="status-text" class="text-sm text-gray-500">Connecting...</span>
+        </div>
+    </header>
+
+    <!-- Messages -->
+    <main id="chat-container" class="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+        <div class="flex justify-center">
+            <p class="text-xs text-gray-400">Start a conversation below</p>
+        </div>
+    </main>
+
+    <!-- Input area -->
+    <footer class="bg-white border-t border-gray-200 px-4 py-4 shrink-0">
+        <div class="max-w-3xl mx-auto flex items-end gap-3">
+            <textarea id="message-input"
+                      rows="2"
+                      placeholder="Type a message (Enter to send, Shift+Enter for new line)"
+                      class="flex-1 resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"></textarea>
+            <button id="send-btn"
+                    onclick="sendMessage()"
+                    class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-3 rounded-xl transition-colors shrink-0">
+                Send
+            </button>
+        </div>
+    </footer>
+
+    <script>const chatContainer = document.getElementById("chat-container");
+        const messageInput  = document.getElementById("message-input");
+        const sendBtn       = document.getElementById("send-btn");
+        const statusDot     = document.getElementById("status-dot");
+        const statusText    = document.getElementById("status-text");
+
+        let currentAiBubble = null;
+        let isStreaming      = false;
+
+        // SSE connection
+        const eventSource = new EventSource("http://localhost:5046/chat/stream");
+
+        eventSource.onopen = () => {
+            statusDot.className    = "w-2.5 h-2.5 rounded-full bg-green-500";
+            statusText.textContent = "Connected";
+        };
+
+        eventSource.onerror = () => {
+            statusDot.className    = "w-2.5 h-2.5 rounded-full bg-red-500";
+            statusText.textContent = "Disconnected";
+        };
+
+        // Event name matches Results.ServerSentEvents(..., "messages") in ChatControllers.cs
+        eventSource.addEventListener("messages", (event) => {
+            const data = JSON.parse(event.data);
+            // Handle both camelCase and PascalCase from System.Text.Json
+            const text = data.message ?? data.Message ?? "";
+
+            // ChatProcessorHostedService writes this line when the response is complete
+            if (text.startsWith("Message Finished")) {
+                appendTokenUsage(text);
+                currentAiBubble     = null;
+                isStreaming         = false;
+                sendBtn.disabled    = false;
+                sendBtn.textContent = "Send";
+                return;
+            }
+
+            // First chunk — create the AI bubble
+            if (!currentAiBubble) {
+                currentAiBubble = appendMessage("ai", "");
+            }
+
+            currentAiBubble.textContent += text;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        });
+
+        async function sendMessage() {
+            const text = messageInput.value.trim();
+            if (!text || isStreaming) return;
+
+            appendMessage("user", text);
+            messageInput.value        = "";
+            messageInput.style.height = "";
+            isStreaming               = true;
+            currentAiBubble           = null;
+            sendBtn.disabled          = true;
+            sendBtn.textContent       = "Sending...";
+
+            try {
+                // POST to /api/chat as defined in ChatControllers.cs
+                const res = await fetch("http://localhost:5046/api/chat", {
+                    method:  "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body:    JSON.stringify({ message: text })
+                });
+
+                if (!res.ok) throw new Error("Server returned " + res.status);
+
+                // Keep disabled — SSE stream will re-enable once response is complete
+                sendBtn.textContent = "Waiting...";
+            } catch (err) {
+                appendErrorMessage("Could not send message: " + err.message);
+                isStreaming         = false;
+                sendBtn.disabled    = false;
+                sendBtn.textContent = "Send";
+            }
+        }
+
+        function appendMessage(role, initialText) {
+            const isUser = role === "user";
+
+            const row = document.createElement("div");
+            row.className = "flex " + (isUser ? "justify-end" : "justify-start");
+
+            const bubble = document.createElement("div");
+            bubble.className = isUser
+                ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[75%] text-sm shadow-sm"
+                : "bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%] text-sm shadow-sm";
+
+            const content = document.createElement("p");
+            content.className   = "whitespace-pre-wrap break-words leading-relaxed";
+            content.textContent = initialText;
+
+            bubble.appendChild(content);
+            row.appendChild(bubble);
+            chatContainer.appendChild(row);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+            return content; // caller streams text into this <p>
+        }
+
+        function appendTokenUsage(text) {
+            const row = document.createElement("div");
+            row.className = "flex justify-center";
+
+            const pill = document.createElement("span");
+            pill.className   = "text-xs text-gray-400 bg-gray-100 rounded-full px-3 py-1";
+            pill.textContent = text;
+
+            row.appendChild(pill);
+            chatContainer.appendChild(row);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function appendErrorMessage(msg) {
+            const row = document.createElement("div");
+            row.className = "flex justify-center";
+
+            const pill = document.createElement("span");
+            pill.className   = "text-xs text-red-500 bg-red-50 rounded-full px-3 py-1";
+            pill.textContent = msg;
+
+            row.appendChild(pill);
+            chatContainer.appendChild(row);
+        }
+
+        // Enter to send, Shift+Enter for newline
+        messageInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Auto-grow textarea
+        messageInput.addEventListener("input", () => {
+            messageInput.style.height = "auto";
+            messageInput.style.height = messageInput.scrollHeight + "px";
+        });</script>
+</body>
+</html>
