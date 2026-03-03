@@ -21,5 +21,9 @@ var modelConfiguration = host.Services.GetRequiredService<ModelConfiguration>();
 
 //Rag Agent
 //await Examples.TestEf(configuration, TestMode.Migrate, host.Services);
-await Examples.TestEf(configuration, TestMode.AddData, host.Services);
-await Examples.RagChatAgent(configuration, host.Services);
+//await Examples.TestEf(configuration, TestMode.AddData, host.Services);
+//await Examples.RagChatAgent(configuration, host.Services);
+
+
+//AI Context Provider example
+await Examples.AiContextProvider(configuration, host.Services);

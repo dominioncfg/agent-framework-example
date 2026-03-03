@@ -14,7 +14,7 @@
 
   <ItemGroup>
     <!-- The Microsoft.Agents.AI.OpenAI package is a preview package that provides integration with OpenAI's language models. -->
-    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-preview.260212.1" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.0.0-rc2" />
 
     <!-- Entity Framework Core packages -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.3" />
