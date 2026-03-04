@@ -1,11 +1,11 @@
-﻿using AgentFrameworkExample.WebApi;
+﻿using Microsoft.Agents.AI;
 using Microsoft.Agents.AI.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using OpenAI;
 using System.Threading.Channels;
 
-namespace gentFrameworkExample.WebApi;
+namespace AgentFrameworkExample.WebApi;
 
 public static class DependencyInjectionConfigurationExtensions
 {
@@ -30,16 +30,30 @@ public static class DependencyInjectionConfigurationExtensions
 
         var chatClient = openAiClient.GetChatClient(ModelName).AsIChatClient();
         builder.Services.AddChatClient(chatClient);
-
         var embeddingGenerator = openAiClient
          .GetEmbeddingClient(EmbeddingModel)
          .AsIEmbeddingGenerator();
         builder.Services.AddEmbeddingGenerator(embeddingGenerator);
 
-        builder
-             .AddAIAgent("architect-helper", Instructions, Description, "architect-helper")
-             .WithAITool(AIFunctionFactory.Create(RagTools.GetSuggestedArchitecture))
-             .WithAITool(AIFunctionFactory.Create(RagTools.CreateQuest));
+        builder.AddAIAgent(
+        name: "architect-helper",
+        (sp, key) =>
+        {
+            var chatClient = sp.GetRequiredService<IChatClient>();
+
+            AIAgent agent = new ChatClientAgent(chatClient, Instructions,
+                name: key,
+                description: Description,
+                tools: [
+                    AIFunctionFactory.Create(RagTools.GetSuggestedArchitecture),
+                    AIFunctionFactory.Create(RagTools.CreateQuest),
+                ],
+                services:sp
+                );
+            return agent;
+        })
+        .WithAITool(AIFunctionFactory.Create(RagTools.GetSuggestedArchitecture))
+        .WithAITool(AIFunctionFactory.Create(RagTools.CreateQuest));
 
         return builder;
     }

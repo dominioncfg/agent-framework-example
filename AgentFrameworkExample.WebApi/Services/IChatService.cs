@@ -1,3 +1,5 @@
+namespace AgentFrameworkExample.WebApi;
+
 public interface IChatService
 {
     Task SendMessageToLlm(string message);

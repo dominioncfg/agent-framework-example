@@ -1,7 +1,7 @@
-using gentFrameworkExample.WebApi;
+using AgentFrameworkExample.WebApi;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
-
 builder
     .RegisterAgentsServices()
     .Services
@@ -14,6 +14,7 @@ var app = builder.Build();
 
 app.UseCors();
 app.MapOpenApi();
+app.MapScalarApiReference();
 app.MapControllers();
 app.MapMessagesSSe();
 app.Run();

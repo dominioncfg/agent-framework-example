@@ -1,8 +1,10 @@
 using Microsoft.Agents.AI;
+using Microsoft.Extensions.DependencyInjection;
 using System.Threading.Channels;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
-public class ChatProcessorHostedService(IChatService chatService, AIAgent agent, ChannelWriter<ServerMessage> channelWriter) : BackgroundService
+namespace AgentFrameworkExample.WebApi;
+
+public class ChatProcessorHostedService(IChatService chatService, [FromKeyedServices("architect-helper")] AIAgent agent, ChannelWriter<ServerMessage> channelWriter) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -40,13 +42,10 @@ public class ChatProcessorHostedService(IChatService chatService, AIAgent agent,
                 // Expected when the service is stopping
                 break;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken); // Wait before retrying
             }
         }
     }
 }
-
-
-public record ServerMessage(string Message);

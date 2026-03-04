@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Agents.AI.Hosting" Version="1.0.0-preview.260225.1" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.3" />
+    <PackageReference Include="Scalar.AspNetCore" Version="2.12.54" />
   </ItemGroup>
 
 
