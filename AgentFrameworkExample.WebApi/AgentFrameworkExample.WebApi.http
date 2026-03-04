@@ -1,6 +1,0 @@
-@AgentFrameworkExample.WebApi_HostAddress = http://localhost:5046
-
-GET {{AgentFrameworkExample.WebApi_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
