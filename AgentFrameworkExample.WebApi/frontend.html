@@ -3,117 +3,250 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Chat</title>
+    <title>AI Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 h-screen flex flex-col overflow-hidden">
-
-    <!-- Header -->
-    <header class="bg-white shadow-sm px-6 py-4 flex items-center justify-between shrink-0">
-        <h1 class="text-lg font-semibold text-gray-800">AI Chat</h1>
-        <div class="flex items-center gap-2">
-            <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
-            <span id="status-text" class="text-sm text-gray-500">Connecting...</span>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-white shadow-sm px-6 py-4">
+        <div class="max-w-5xl mx-auto flex items-center justify-between">
+            <h1 class="text-lg font-semibold text-gray-800">Documentation Search</h1>
+            <p class="text-sm text-gray-500">Semantic vector search</p>
         </div>
     </header>
 
-    <!-- Messages -->
-    <main id="chat-container" class="flex-1 overflow-y-auto px-4 py-6 space-y-4">
-        <div class="flex justify-center">
-            <p class="text-xs text-gray-400">Start a conversation below</p>
-        </div>
+    <main class="max-w-5xl mx-auto px-4 py-6">
+        <section class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row gap-3">
+                <input
+                    id="search-input"
+                    type="text"
+                    placeholder="Search documentation..."
+                    class="flex-1 rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <button
+                    id="search-btn"
+                    class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-3 rounded-xl transition-colors"
+                >
+                    Search
+                </button>
+            </div>
+            <p id="search-status" class="mt-3 text-xs text-gray-500">Type a query and run search.</p>
+        </section>
+
+        <section class="mt-6">
+            <div id="search-results" class="space-y-3"></div>
+        </section>
     </main>
 
-    <!-- Input area -->
-    <footer class="bg-white border-t border-gray-200 px-4 py-4 shrink-0">
-        <div class="max-w-3xl mx-auto flex items-end gap-3">
-            <textarea id="message-input"
-                      rows="2"
-                      placeholder="Type a message (Enter to send, Shift+Enter for new line)"
-                      class="flex-1 resize-none rounded-xl border border-gray-300 px-4 py-3 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"></textarea>
-            <button id="send-btn"
-                    onclick="sendMessage()"
-                    class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-3 rounded-xl transition-colors shrink-0">
-                Send
-            </button>
-        </div>
-    </footer>
+    <button
+        id="chat-toggle-btn"
+        type="button"
+        class="fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 py-3 shadow-lg text-sm font-medium"
+    >
+        Open Chat
+    </button>
 
-    <script>const chatContainer = document.getElementById("chat-container");
-        const messageInput  = document.getElementById("message-input");
-        const sendBtn       = document.getElementById("send-btn");
-        const statusDot     = document.getElementById("status-dot");
-        const statusText    = document.getElementById("status-text");
+    <section
+        id="chat-panel"
+        class="hidden fixed bottom-24 right-6 w-[380px] max-w-[calc(100vw-2rem)] h-[560px] bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden flex-col"
+    >
+        <header class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
+            <h2 class="text-sm font-semibold text-gray-800">AI Chat</h2>
+            <div class="flex items-center gap-2">
+                <span id="status-dot" class="w-2.5 h-2.5 rounded-full bg-yellow-400"></span>
+                <span id="status-text" class="text-xs text-gray-500">Connecting...</span>
+            </div>
+        </header>
+
+        <main id="chat-container" class="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-gray-50">
+            <div class="flex justify-center">
+                <p class="text-xs text-gray-400">Start a conversation below</p>
+            </div>
+        </main>
+
+        <footer class="bg-white border-t border-gray-200 px-3 py-3 shrink-0">
+            <div class="flex items-end gap-2">
+                <textarea
+                    id="message-input"
+                    rows="2"
+                    placeholder="Type a message"
+                    class="flex-1 resize-none rounded-xl border border-gray-300 px-3 py-2 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                ></textarea>
+                <button
+                    id="send-btn"
+                    class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed text-white text-sm font-medium px-4 py-2.5 rounded-xl transition-colors shrink-0"
+                >
+                    Send
+                </button>
+            </div>
+        </footer>
+    </section>
+
+    <script>
+        const API_BASE_URL = "http://localhost:5046";
+
+        const searchInput = document.getElementById("search-input");
+        const searchBtn = document.getElementById("search-btn");
+        const searchStatus = document.getElementById("search-status");
+        const searchResults = document.getElementById("search-results");
+
+        const chatToggleBtn = document.getElementById("chat-toggle-btn");
+        const chatPanel = document.getElementById("chat-panel");
+        const chatContainer = document.getElementById("chat-container");
+        const messageInput = document.getElementById("message-input");
+        const sendBtn = document.getElementById("send-btn");
+        const statusDot = document.getElementById("status-dot");
+        const statusText = document.getElementById("status-text");
 
         let currentAiBubble = null;
-        let isStreaming      = false;
+        let isStreaming = false;
+        let eventSource = null;
+        let chatInitialized = false;
 
-        // SSE connection
-        const eventSource = new EventSource("http://localhost:5046/chat/stream");
-
-        eventSource.onopen = () => {
-            statusDot.className    = "w-2.5 h-2.5 rounded-full bg-green-500";
-            statusText.textContent = "Connected";
-        };
-
-        eventSource.onerror = () => {
-            statusDot.className    = "w-2.5 h-2.5 rounded-full bg-red-500";
-            statusText.textContent = "Disconnected";
-        };
-
-        // Event name matches Results.ServerSentEvents(..., "messages") in ChatControllers.cs
-        eventSource.addEventListener("messages", (event) => {
-            const data = JSON.parse(event.data);
-            // Handle both camelCase and PascalCase from System.Text.Json
-            const text = data.message ?? data.Message ?? "";
-
-            // ChatProcessorHostedService writes this line when the response is complete
-            if (text.startsWith("Message Finished")) {
-                appendTokenUsage(text);
-                currentAiBubble     = null;
-                isStreaming         = false;
-                sendBtn.disabled    = false;
-                sendBtn.textContent = "Send";
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) {
+                searchStatus.textContent = "Please enter a search query.";
                 return;
             }
 
-            // First chunk — create the AI bubble
-            if (!currentAiBubble) {
-                currentAiBubble = appendMessage("ai", "");
+            searchBtn.disabled = true;
+            searchStatus.textContent = "Searching...";
+            searchResults.innerHTML = "";
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/api/search?query=${encodeURIComponent(query)}`);
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
+
+                const items = await res.json();
+                renderSearchResults(items);
+                searchStatus.textContent = `${items.length} result(s) found.`;
+            } catch (err) {
+                searchStatus.textContent = `Search failed: ${err.message}`;
+                renderSearchError(err.message);
+            } finally {
+                searchBtn.disabled = false;
+            }
+        }
+
+        function renderSearchResults(items) {
+            searchResults.innerHTML = "";
+
+            if (!Array.isArray(items) || items.length === 0) {
+                searchResults.innerHTML = '<div class="bg-white rounded-xl border border-gray-200 p-4 text-sm text-gray-600">No results found.</div>';
+                return;
             }
 
-            currentAiBubble.textContent += text;
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        });
+            items.forEach((item) => {
+                const card = document.createElement("article");
+                card.className = "bg-white rounded-xl border border-gray-200 p-4 shadow-sm";
+
+                const title = document.createElement("h3");
+                title.className = "text-sm sm:text-base font-semibold text-gray-800";
+                title.textContent = item.title ?? item.Title ?? "Untitled";
+
+                const id = document.createElement("p");
+                id.className = "mt-1 text-xs text-gray-400";
+                id.textContent = `ID: ${item.id ?? item.Id ?? "-"}`;
+
+                const description = document.createElement("p");
+                description.className = "mt-3 text-sm text-gray-600";
+                description.textContent =
+                    item.description ??
+                    item.Description ??
+                    "Description will be available once the API includes it.";
+
+                card.appendChild(title);
+                card.appendChild(id);
+                card.appendChild(description);
+                searchResults.appendChild(card);
+            });
+        }
+
+        function renderSearchError(message) {
+            searchResults.innerHTML = `<div class="bg-red-50 text-red-600 rounded-xl border border-red-200 p-4 text-sm">${message}</div>`;
+        }
+
+        function initializeChat() {
+            if (chatInitialized) {
+                return;
+            }
+
+            eventSource = new EventSource(`${API_BASE_URL}/chat/stream`);
+
+            eventSource.onopen = () => {
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-green-500";
+                statusText.textContent = "Connected";
+            };
+
+            eventSource.onerror = () => {
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
+                statusText.textContent = "Disconnected";
+            };
+
+            eventSource.addEventListener("messages", (event) => {
+                const data = JSON.parse(event.data);
+                const text = data.message ?? data.Message ?? "";
+
+                if (text.startsWith("Message Finished")) {
+                    appendTokenUsage(text);
+                    currentAiBubble = null;
+                    isStreaming = false;
+                    sendBtn.disabled = false;
+                    sendBtn.textContent = "Send";
+                    return;
+                }
+
+                if (!currentAiBubble) {
+                    currentAiBubble = appendMessage("ai", "");
+                }
+
+                currentAiBubble.textContent += text;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+
+            sendBtn.addEventListener("click", sendMessage);
+            messageInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            messageInput.addEventListener("input", () => {
+                messageInput.style.height = "auto";
+                messageInput.style.height = `${messageInput.scrollHeight}px`;
+            });
+
+            chatInitialized = true;
+        }
 
         async function sendMessage() {
             const text = messageInput.value.trim();
             if (!text || isStreaming) return;
 
             appendMessage("user", text);
-            messageInput.value        = "";
+            messageInput.value = "";
             messageInput.style.height = "";
-            isStreaming               = true;
-            currentAiBubble           = null;
-            sendBtn.disabled          = true;
-            sendBtn.textContent       = "Sending...";
+            isStreaming = true;
+            currentAiBubble = null;
+            sendBtn.disabled = true;
+            sendBtn.textContent = "Sending...";
 
             try {
-                // POST to /api/chat as defined in ChatControllers.cs
-                const res = await fetch("http://localhost:5046/api/chat", {
-                    method:  "POST",
+                const res = await fetch(`${API_BASE_URL}/api/chat`, {
+                    method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body:    JSON.stringify({ message: text })
+                    body: JSON.stringify({ message: text })
                 });
 
-                if (!res.ok) throw new Error("Server returned " + res.status);
+                if (!res.ok) throw new Error(`Server returned ${res.status}`);
 
-                // Keep disabled — SSE stream will re-enable once response is complete
                 sendBtn.textContent = "Waiting...";
             } catch (err) {
-                appendErrorMessage("Could not send message: " + err.message);
-                isStreaming         = false;
-                sendBtn.disabled    = false;
+                appendErrorMessage(`Could not send message: ${err.message}`);
+                isStreaming = false;
+                sendBtn.disabled = false;
                 sendBtn.textContent = "Send";
             }
         }
@@ -122,15 +255,15 @@
             const isUser = role === "user";
 
             const row = document.createElement("div");
-            row.className = "flex " + (isUser ? "justify-end" : "justify-start");
+            row.className = `flex ${isUser ? "justify-end" : "justify-start"}`;
 
             const bubble = document.createElement("div");
             bubble.className = isUser
-                ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[75%] text-sm shadow-sm"
-                : "bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[75%] text-sm shadow-sm";
+                ? "bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%] text-sm shadow-sm"
+                : "bg-white text-gray-800 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%] text-sm shadow-sm border border-gray-200";
 
             const content = document.createElement("p");
-            content.className   = "whitespace-pre-wrap break-words leading-relaxed";
+            content.className = "whitespace-pre-wrap break-words leading-relaxed";
             content.textContent = initialText;
 
             bubble.appendChild(content);
@@ -138,7 +271,7 @@
             chatContainer.appendChild(row);
             chatContainer.scrollTop = chatContainer.scrollHeight;
 
-            return content; // caller streams text into this <p>
+            return content;
         }
 
         function appendTokenUsage(text) {
@@ -146,7 +279,7 @@
             row.className = "flex justify-center";
 
             const pill = document.createElement("span");
-            pill.className   = "text-xs text-gray-400 bg-gray-100 rounded-full px-3 py-1";
+            pill.className = "text-xs text-gray-400 bg-gray-100 rounded-full px-3 py-1";
             pill.textContent = text;
 
             row.appendChild(pill);
@@ -159,25 +292,37 @@
             row.className = "flex justify-center";
 
             const pill = document.createElement("span");
-            pill.className   = "text-xs text-red-500 bg-red-50 rounded-full px-3 py-1";
+            pill.className = "text-xs text-red-500 bg-red-50 rounded-full px-3 py-1";
             pill.textContent = msg;
 
             row.appendChild(pill);
             chatContainer.appendChild(row);
         }
 
-        // Enter to send, Shift+Enter for newline
-        messageInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+        chatToggleBtn.addEventListener("click", () => {
+            const isHidden = chatPanel.classList.contains("hidden");
+
+            if (isHidden) {
+                chatPanel.classList.remove("hidden");
+                chatPanel.classList.add("flex");
+                chatToggleBtn.textContent = "Close Chat";
+                initializeChat();
+                messageInput.focus();
+                return;
             }
+
+            chatPanel.classList.add("hidden");
+            chatPanel.classList.remove("flex");
+            chatToggleBtn.textContent = "Open Chat";
         });
 
-        // Auto-grow textarea
-        messageInput.addEventListener("input", () => {
-            messageInput.style.height = "auto";
-            messageInput.style.height = messageInput.scrollHeight + "px";
-        });</script>
+        searchBtn.addEventListener("click", performSearch);
+        searchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+    </script>
 </body>
 </html>
