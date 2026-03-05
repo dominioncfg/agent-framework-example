@@ -26,4 +26,4 @@ var modelConfiguration = host.Services.GetRequiredService<ModelConfiguration>();
 
 
 //AI Context Provider example
-await Examples.AiContextProvider(configuration, host.Services);
+await Examples.AiMessageHistoryProvider(configuration, host.Services);
