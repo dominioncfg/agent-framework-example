@@ -1,4 +1,4 @@
-﻿namespace AgentFrameworkExamples;
+namespace AgentFrameworkExamples;
 
 public interface ITransientDependencyTool
 {
@@ -7,10 +7,7 @@ public interface ITransientDependencyTool
 
 public class TransientDependencyTool : ITransientDependencyTool
 {
-    public string GetCurrentDateTime()
-    {
-        return DateTime.UtcNow.ToString("o");
-    }
+    public string GetCurrentDateTime() => DateTime.UtcNow.ToString("o");
 }
 
 public interface IScopedDependencyTool
@@ -20,20 +17,15 @@ public interface IScopedDependencyTool
 
 public class ScopedDependencyTool : IScopedDependencyTool
 {
-    public string GetCurrentDateTime()
-    {
-        return DateTime.UtcNow.ToString("o");
-    }
+    public string GetCurrentDateTime() => DateTime.UtcNow.ToString("o");
 }
 
 public interface ISingletonDependencyTool
 {
     string GetCurrentDateTime();
 }
+
 public class SingletonDependencyTool : ISingletonDependencyTool
 {
-    public string GetCurrentDateTime()
-    {
-        return DateTime.UtcNow.ToString("o");
-    }
+    public string GetCurrentDateTime() => DateTime.UtcNow.ToString("o");
 }

@@ -1,113 +1,11 @@
-﻿using Microsoft.Agents.AI;
 using Microsoft.Data.SqlTypes;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using OpenAI;
-using OpenAI.Chat;
 
 namespace AgentFrameworkExamples;
 
-public static partial class Examples
-{
-    public static async Task TestEf(IConfiguration configuration, TestMode mode, IServiceProvider serviceProvider)
-    {
-        switch (mode)
-        {
-            case TestMode.Migrate:
-                await Migrate(serviceProvider);
-                break;
-            case TestMode.AddData:
-                await AddData(configuration, serviceProvider);
-                break;
-            case TestMode.QueryData:
-                await QueryData(configuration, serviceProvider);
-                break;
-        }
-    }
-
-    public static async Task Migrate(IServiceProvider serviceProvider)
-    {
-        Console.WriteLine("Ensuring database is created and up to date with the latest migrations...");
-        using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<DocumentationDbContext>();
-        await context.Database.EnsureCreatedAsync();
-    }
-
-
-    public static async Task AddData(IConfiguration configuration, IServiceProvider serviceProvider)
-    {
-        using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<DocumentationDbContext>();
-        var modelConfiguration = serviceProvider.GetRequiredService<ModelConfiguration>();
-        string apiKey = configuration.GetApiKeyOrExit();
-        var client = new OpenAIClient(apiKey);
-
-        var embeddingGenerator = client
-         .GetEmbeddingClient("text-embedding-3-small")
-         .AsIEmbeddingGenerator();
-
-        Console.WriteLine("Adding data with embeddings to the database...");
-        foreach (var article in TestData.Articles)
-        {
-            if (!await context.DocumentationArticles.AnyAsync(a => a.Title == article.Title))
-            {
-                var embedding = await embeddingGenerator.GenerateAsync(article.Content);
-                article.Embedding = new SqlVector<float>(embedding.Vector);
-                context.DocumentationArticles.Add(article);
-                await context.SaveChangesAsync();
-            }
-        }
-
-    }
-
-    public static async Task QueryData(IConfiguration configuration, IServiceProvider serviceProvider)
-    {
-        using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<DocumentationDbContext>();
-        string apiKey = configuration.GetApiKeyOrExit();
-        var client = new OpenAIClient(apiKey);
-        var embeddingGenerator = client
-         .GetEmbeddingClient("text-embedding-3-small")
-         .AsIEmbeddingGenerator();
-        Console.WriteLine("About what technology you are interested in?");
-        var rawQuery = Console.ReadLine();
-        Console.WriteLine("Querying data from the database...");
-
-        string query = rawQuery!;
-        var queryEmbedding = await embeddingGenerator.GenerateAsync(query);
-        var queryVector = new SqlVector<float>(queryEmbedding.Vector);
-        var results = await context.DocumentationArticles
-         .OrderBy(b => EF.Functions.VectorDistance("cosine", b.Embedding, queryVector))
-         .Take(3)
-         .ToListAsync();
-        Console.WriteLine("Top 5 relevant articles:");
-        
-        foreach (var result in results)
-        {
-            Console.WriteLine("=====");
-            Console.WriteLine($"Title: {result.Title}, Similarity: {result.Content}");
-            Console.WriteLine("=====");
-        }
-    }
-}
-
-
-public enum TestMode
-{
-    Migrate,
-    AddData,
-    QueryData,
-}
-
-#region EF Core Setup
-//DbContext for EF Core
 public class DocumentationDbContext : DbContext
 {
-    public DocumentationDbContext(DbContextOptions<DocumentationDbContext> options) : base(options)
-    {
-    }
+    public DocumentationDbContext(DbContextOptions<DocumentationDbContext> options) : base(options) { }
 
     public DbSet<DocumentationArticle> DocumentationArticles { get; set; }
 
@@ -125,22 +23,14 @@ public class DocumentationDbContext : DbContext
     }
 }
 
-//This Ef entity
 public class DocumentationArticle
 {
     public Guid Id { get; set; }
     public string Title { get; set; } = "";
     public string Content { get; set; } = "";
-
-    //For Vector Embeddings
     public SqlVector<float> Embedding { get; set; }
 }
-#endregion
 
-
-#region Data
-
-//Test data with 10 different types of apps and architectures for cloud deployment
 public class TestData
 {
     public static List<DocumentationArticle> Articles { get; set; } = new List<DocumentationArticle>
@@ -207,6 +97,3 @@ public class TestData
         }
     };
 }
-
-
-#endregion
