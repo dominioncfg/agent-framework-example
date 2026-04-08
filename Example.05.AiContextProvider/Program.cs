@@ -53,6 +53,7 @@ while (true)
     {
         Console.WriteLine();
         Console.WriteLine($"Tokens - In: {response.Usage.InputTokenCount} - Out: {response.Usage.OutputTokenCount}");
+        Console.WriteLine($"Facts: {string.Join(",", usersFacts)}");
     }
     Console.WriteLine("==============================================");
 }
