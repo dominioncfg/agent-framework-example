@@ -110,12 +110,13 @@ class MyAIContextProvider : AIContextProvider
         ];
 
         AgentResponse<MemoryUpdate> response = await memoryExtractorAgent.RunAsync<MemoryUpdate>(inputToMemoryExtractor, cancellationToken: cancellationToken);
-        foreach (string memoryToRemove in response.Result.MemoryToRemove)
+        
+        foreach (string memoryToRemove in response.Result.MemoryToRemove ?? [])
         {
             userFacts.Remove(memoryToRemove);
         }
 
-        userFacts.AddRange(response.Result.MemoryToAdd);
+        userFacts.AddRange(response.Result.MemoryToAdd ?? []);
     }
 
     private record MemoryUpdate(List<string> MemoryToAdd, List<string> MemoryToRemove);
