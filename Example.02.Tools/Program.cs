@@ -80,9 +80,10 @@ public static class MadridTourismTools
     [Description("Gets the current weather in Madrid")]
     public static string GetMadridWeather(IServiceProvider serviceProvider)
     {
+        using var scope = serviceProvider.CreateScope();
         var staticDepenency = serviceProvider.GetRequiredService<ISingletonDependencyTool>();
-        var scopedTool = serviceProvider.GetRequiredService<IScopedDependencyTool>();
-        var transcientTool = serviceProvider.GetRequiredService<ITransientDependencyTool>();
+        var scopedTool = scope.ServiceProvider.GetRequiredService<IScopedDependencyTool>();
+        var transcientTool = scope.ServiceProvider.GetRequiredService<ITransientDependencyTool>();
 
         Console.WriteLine($"[MadridTourismTools] Current date and time from IStaticDependencyTool: {staticDepenency.GetCurrentDateTime()}");
         Console.WriteLine($"[MadridTourismTools] Current date and time from IScopedDependencyTool: {scopedTool.GetCurrentDateTime()}");
