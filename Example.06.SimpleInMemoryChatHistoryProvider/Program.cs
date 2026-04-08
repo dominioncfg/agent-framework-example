@@ -9,12 +9,13 @@ using OpenAI.Chat;
 using System.Text.Json.Serialization;
 
 const string ModelName = "gpt-4.1-nano";
-const string Instructions = "Prefix all messages with 👋👋👋";
+const string Instructions = "You are a traveling assistant";
 
 var host = Host.CreateDefaultBuilder().Build();
 var configuration = host.Services.GetRequiredService<IConfiguration>();
 string apiKey = configuration.GetApiKeyOrExit();
 var client = new OpenAIClient(apiKey);
+var chatHistoryProvider = new SimpleInMemoryChatHistoryProvider();
 
 var agent = client
     .GetChatClient(ModelName)
@@ -24,7 +25,7 @@ var agent = client
         {
             Instructions = Instructions
         },
-        ChatHistoryProvider = new SimpleInMemoryChatHistoryProvider(),
+        ChatHistoryProvider = chatHistoryProvider,
     });
 var session = await agent.CreateSessionAsync();
 
@@ -32,6 +33,11 @@ while (true)
 {
     Console.Write("> ");
     string input = Console.ReadLine() ?? "";
+    if (string.IsNullOrEmpty(input) || input.ToLower() == "exit")
+    {
+        break;
+    }
+
     List<AgentResponseUpdate> updates = [];
     await foreach (AgentResponseUpdate update in agent.RunStreamingAsync(input, session))
     {
@@ -45,9 +51,19 @@ while (true)
         Console.WriteLine();
         Console.WriteLine($"Tokens - In: {response.Usage.InputTokenCount} - Out: {response.Usage.OutputTokenCount}");
     }
-    Console.WriteLine("==============================================");
 }
+Console.WriteLine("==============================================");
 
+var messages = chatHistoryProvider.GetCurrentMessages(session);
+Console.WriteLine("=====");
+Console.WriteLine($"Total messages in history: {messages.Count()}");
+Console.WriteLine("");
+
+foreach (var message in messages)
+{
+    Console.WriteLine($"{message.Role}: {message.Text}");
+}
+Console.WriteLine("=====");
 
 public sealed class SimpleInMemoryChatHistoryProvider : ChatHistoryProvider
 {
@@ -84,6 +100,12 @@ public sealed class SimpleInMemoryChatHistoryProvider : ChatHistoryProvider
         Console.WriteLine($"Messages in store: {state.Messages.Count()}");
 
         return default;
+    }
+
+
+    public List<Microsoft.Extensions.AI.ChatMessage> GetCurrentMessages(AgentSession? session = null)
+    {
+        return this._sessionState.GetOrInitializeState(session).Messages;
     }
 
     public sealed class State
