@@ -10,8 +10,7 @@ using OpenAI;
 var host = Host.CreateDefaultBuilder()
     .ConfigureServices((context, services) =>
     {
-        var connectionString = context.Configuration.GetConnectionString("DefaultConnection")
-            ?? "Server=localhost,1433;Database=AgentFrameworkDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;";
+        var connectionString = context.Configuration.GetConnectionString("DefaultConnection");
         services.AddDbContext<DocumentationDbContext>(options =>
             options.UseSqlServer(connectionString));
     })

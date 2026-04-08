@@ -6,7 +6,7 @@
   <Project Path="AgentFrameworkExample.WebApi/AgentFrameworkExample.WebApi.csproj" Id="174ee52f-02a6-417e-ab4d-7495b53e6c7d" />
 <Project Path="Example.01.BasicChatLoop/Example.01.BasicChatLoop.csproj" />
   <Project Path="Example.02.Tools/Example.02.Tools.csproj" />
-  <Project Path="Example.03.EfCore/Example.03.EfCore.csproj" />
+  <Project Path="Example.03.Embeddings/Example.03.Embeddings.csproj" />
   <Project Path="Example.04.RagChatAgent/Example.04.RagChatAgent.csproj" />
   <Project Path="Example.05.AiContextProvider/Example.05.AiContextProvider.csproj" />
   <Project Path="Example.06.AiMessageHistoryProvider/Example.06.AiMessageHistoryProvider.csproj" />

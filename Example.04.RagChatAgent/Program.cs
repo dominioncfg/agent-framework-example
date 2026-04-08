@@ -18,7 +18,7 @@ var host = Host.CreateDefaultBuilder()
     .ConfigureServices((context, services) =>
     {
         var connectionString = context.Configuration.GetConnectionString("DefaultConnection")
-            ?? "Server=localhost,1433;Database=AgentFrameworkDb;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;";
+            ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
         services.AddDbContext<DocumentationDbContext>(options =>
             options.UseSqlServer(connectionString));
     })
@@ -28,7 +28,7 @@ string apiKey = configuration.GetApiKeyOrExit();
 var client = new OpenAIClient(apiKey);
 
 // Requires the database to be migrated and populated first.
-// Run Example.03.EfCore with Migrate() and AddData() before running this example.
+// Run Example.03.Embeddings with Migrate() and IndexData() before running this example.
 
 var internalTools = new List<AITool>
 {
